@@ -6,6 +6,44 @@ import { attachListeners } from './attach-listener';
 import { attachSharedListeners } from './attach-shared-listeners';
 import { addSubscriber, removeSubscriber, hasSubscribers } from './manage-subscribers';
 
+// Helper function to detect iOS platform
+const isIOS = () => {
+  if (isReactNative) {
+    try {
+      // In React Native, we need to check Platform.OS
+      const Platform = require('react-native').Platform;
+      return Platform.OS === 'ios';
+    } catch (e) {
+      // Fallback: check user agent if available
+      return typeof navigator !== 'undefined' && 
+             /iPad|iPhone|iPod/.test(navigator.userAgent);
+    }
+  }
+  return false;
+};
+
+// Helper function to prepare WebSocket options with headers
+const prepareWebSocketOptions = (options: Options) => {
+  let headers = options.headers || {};
+  
+  // Automatically add User-Agent for iOS
+  if (isIOS() && !headers['User-Agent']) {
+    headers['User-Agent'] = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1';
+  }
+  
+  // Add common headers for React Native
+  if (isReactNative) {
+    if (!headers['Origin']) {
+      headers['Origin'] = 'https://gmgn.ai';
+    }
+    if (!headers['Referer']) {
+      headers['Referer'] = 'https://gmgn.ai/';
+    }
+  }
+  
+  return Object.keys(headers).length > 0 ? { headers } : undefined;
+};
+
 //TODO ensure that all onClose callbacks are called
 
 const cleanSubscribers = (
@@ -61,9 +99,14 @@ export const createOrJoinSocket = (
   if (optionsRef.current.share) {
     let clearSocketIoPingInterval: ((() => void) | null) = null;
     if (sharedWebSockets[url] === undefined) {
-      sharedWebSockets[url] = optionsRef.current.eventSourceOptions ?
-        new EventSource(url, optionsRef.current.eventSourceOptions) :
-        new WebSocket(url, optionsRef.current.protocols);
+      if (optionsRef.current.eventSourceOptions) {
+        sharedWebSockets[url] = new EventSource(url, optionsRef.current.eventSourceOptions);
+      } else {
+        const wsOptions = prepareWebSocketOptions(optionsRef.current);
+        sharedWebSockets[url] = wsOptions ?
+          new (WebSocket as any)(url, optionsRef.current.protocols, wsOptions) :
+          new WebSocket(url, optionsRef.current.protocols);
+      }
       webSocketRef.current = sharedWebSockets[url];
       setReadyState(ReadyState.CONNECTING);
       clearSocketIoPingInterval = attachSharedListeners(
@@ -96,9 +139,14 @@ export const createOrJoinSocket = (
       clearSocketIoPingInterval,
     );
   } else {
-    webSocketRef.current = optionsRef.current.eventSourceOptions ?
-      new EventSource(url, optionsRef.current.eventSourceOptions) :
-      new WebSocket(url, optionsRef.current.protocols);
+    if (optionsRef.current.eventSourceOptions) {
+      webSocketRef.current = new EventSource(url, optionsRef.current.eventSourceOptions);
+    } else {
+      const wsOptions = prepareWebSocketOptions(optionsRef.current);
+      webSocketRef.current = wsOptions ?
+        new (WebSocket as any)(url, optionsRef.current.protocols, wsOptions) :
+        new WebSocket(url, optionsRef.current.protocols);
+    }
     setReadyState(ReadyState.CONNECTING);
     if (!webSocketRef.current) {
       throw new Error('WebSocket failed to be created');

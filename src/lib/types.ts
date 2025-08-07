@@ -9,6 +9,7 @@ export interface Options {
   fromSocketIO?: boolean;
   queryParams?: QueryParams;
   protocols?: string | string[];
+  headers?: Record<string, string>;
   share?: boolean;
   onOpen?: (event: WebSocketEventMap['open']) => void;
   onClose?: (event: WebSocketEventMap['close']) => void;

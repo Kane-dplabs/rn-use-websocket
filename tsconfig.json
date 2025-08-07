@@ -1,27 +1,24 @@
 {
-  "compilerOptions": {
-      "outDir": "./dist/",
-      "sourceMap": true,
-      "module": "commonjs",
-      "esModuleInterop": true,
-      "target": "es5",
-      "jsx": "react",
-      "skipLibCheck": true,
-      "lib": ["es2017", "dom"],
-      "types" : ["node", "websocket", "jest"],
-      "strict": true,
-      "declaration": true,
-      "baseUrl": ".",
-      "paths": {
-        "@lib/*": [
-            "src/lib/*"
-        ]
-    }
-  },
-  "files": [
-    "./src/index.ts"
-  ],
-  "include": [
-    "src/*"
-  ]
+    "compilerOptions": {
+        "target": "es5",
+        "lib": ["dom", "dom.iterable", "es6"],
+        "allowJs": true,
+        "skipLibCheck": true,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "strict": true,
+        "forceConsistentCasingInFileNames": true,
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "noEmit": false,
+        "declaration": true,
+        "declarationMap": true,
+        "sourceMap": true,
+        "outDir": "dist",
+        "jsx": "react"
+    },
+    "include": ["src/**/*"],
+    "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.test.tsx"]
 }
